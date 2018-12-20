@@ -2,6 +2,7 @@ package org.teckown.hello;
 
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -12,6 +13,7 @@ import android.view.MenuItem;
 public class MainActivity extends AppCompatActivity {
 
     Intent intent;
+   // private SharedPreferences mPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
+      //  mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
     }
 
     @Override

@@ -10,7 +10,7 @@
         android:padding="16dp">
 
         <EditText
-            android:id="@+id/editText3"
+            android:id="@+id/userEmail"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
@@ -18,23 +18,24 @@
             android:text="Name" />
 
         <EditText
-            android:id="@+id/editText4"
+            android:id="@+id/userPwd"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPassword" />
 
         <EditText
-            android:id="@+id/editText5"
+            android:id="@+id/userPwdConfirm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ems="10"
             android:inputType="textPassword" />
 
         <Button
-            android:id="@+id/button3"
+            android:id="@+id/joinButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="registerNewAccount"
             android:text="Button" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
