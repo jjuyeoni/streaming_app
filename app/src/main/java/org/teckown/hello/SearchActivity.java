@@ -44,10 +44,11 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     public void onClick(View v){
-        if( num == 0 )
-            Toast.makeText(getApplicationContext(),
-                    "유투브", Toast.LENGTH_SHORT).show();
-        else if( num == 1){
+        if( num == 0 ) {
+            Toast.makeText(getApplicationContext(), "유투브", Toast.LENGTH_SHORT).show();
+            searchYoutube();
+        }
+        else if( num == 1) {
             WebView myWebView = (WebView) findViewById(R.id.webview);
             myWebView.loadUrl("https://tv.kakao.com/search?q="+param.getText());
         }
@@ -57,5 +58,9 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         else
             Toast.makeText(getApplicationContext(),
                     "에러", Toast.LENGTH_SHORT).show();
+    }
+
+    public void searchYoutube() {
+
     }
 }
