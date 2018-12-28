@@ -9,11 +9,11 @@
 
     <!-- Settings, should always be in the overflow -->
     <item android:id="@+id/action_settings2"
-        android:title="회원가입"
+        android:title="로그인"
         app:showAsAction="never"/>
 
     <item android:id="@+id/action_settings3"
-        android:title="로그인"
+        android:title="회원가입"
         app:showAsAction="never"/>
 
 </menu>
