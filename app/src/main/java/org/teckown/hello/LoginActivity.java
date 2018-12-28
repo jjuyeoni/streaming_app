@@ -34,7 +34,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        mPreferences = getSharedPreferences("CurrentUsers", MODE_PRIVATE);
+        mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
     }
 
     public void login(View v){
@@ -113,12 +113,12 @@ public class LoginActivity extends AppCompatActivity {
                 if (json.getBoolean("success")) {
                     // everything is ok
                     SharedPreferences.Editor editor = mPreferences.edit();
-                    // save the returned auth_token into
-                    // the SharedPreferences
+//                    // save the returned auth_token into
+//                    // the SharedPreferences
                     editor.putString("AuthToken", json.getJSONObject("data").getString("auth_token"));
                     editor.commit();
                     // launch the Activity and close this one
-                    Log.i("check111",json.getJSONObject("data").getString("auth_token"));
+
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                     finish();
