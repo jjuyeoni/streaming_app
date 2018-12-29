@@ -16,4 +16,8 @@
         android:title="회원가입"
         app:showAsAction="never"/>
 
+    <item android:id="@+id/action_settings4"
+        android:title="로그아웃"
+        app:showAsAction="never"/>
+
 </menu>

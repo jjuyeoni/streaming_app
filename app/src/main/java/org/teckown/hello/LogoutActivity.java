@@ -1,51 +1,37 @@
 package org.teckown.hello;
 
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.savagelook.android.UrlJsonAsyncTask;
 
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class LogoutActivity extends AppCompatActivity {
 
     Intent intent;
     private SharedPreferences mPreferences;
-    private static final String TASKS_URL = "https://avocadoapi.herokuapp.com/api/v1/sessions/verify";
+    private static final String TASKS_URL = "https://avocadoapi.herokuapp.com/api/v1/sessions";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
-
-//      create toolbar
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
-        setSupportActionBar(myToolbar);
-        Log.i("사용자",mPreferences.getString("AuthToken",""));
-        Toast.makeText(this, mPreferences.getString("email",""), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -54,14 +40,14 @@ public class MainActivity extends AppCompatActivity {
         if (mPreferences.contains("AuthToken")) {
             loadTasksFromAPI(TASKS_URL);
         } else {
-            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            Intent intent = new Intent(LogoutActivity.this, LoginActivity.class);
             startActivityForResult(intent, 0);
         }
     }
 
     private void loadTasksFromAPI(String url) {
-        GetTasksTask getTasksTask = new GetTasksTask(MainActivity.this);
-        getTasksTask.setMessageLoading("Loading tasks...");
+        GetTasksTask getTasksTask = new GetTasksTask(LogoutActivity.this);
+        getTasksTask.setMessageLoading("Logged out...");
         getTasksTask.execute(url + "?auth_token=" + mPreferences.getString("AuthToken", ""));
     }
 
@@ -69,10 +55,11 @@ public class MainActivity extends AppCompatActivity {
         public GetTasksTask(Context context) {
             super(context);
         }
+
         @Override
         protected JSONObject doInBackground(String... urls) {
             DefaultHttpClient client = new DefaultHttpClient();
-            HttpPost post = new HttpPost(urls[0]);
+            HttpDelete delete = new HttpDelete(urls[0]);
             String response = null;
             JSONObject json = new JSONObject();
 
@@ -84,11 +71,11 @@ public class MainActivity extends AppCompatActivity {
                     json.put("info", "Something went wrong. Retry!");
 
                     // setup the request headers
-                    post.setHeader("Accept", "application/json");
-                    post.setHeader("Content-Type", "application/json");
+                    delete.setHeader("Accept", "application/json");
+                    delete.setHeader("Content-Type", "application/json");
 
                     ResponseHandler<String> responseHandler = new BasicResponseHandler();
-                    response = client.execute(post, responseHandler);
+                    response = client.execute(delete, responseHandler);
                     json = new JSONObject(response);
 
                 }catch (IOException e) {
@@ -101,59 +88,24 @@ public class MainActivity extends AppCompatActivity {
             }
             return json;
         }
+
         @Override
         protected void onPostExecute(JSONObject json) {
             try {
                 if (json.getBoolean("success")) {
+                    Log.i("check1","성공입니다.");
                     SharedPreferences.Editor editor = mPreferences.edit();
-                    editor.putString("uid", json.getJSONObject("data").getString("user_id"));
-                    editor.putString("email", json.getJSONObject("data").getString("email"));
+                    editor.clear();
                     editor.commit();
+
+                    intent = new Intent(LogoutActivity.this, MainActivity.class);
+                    startActivity(intent);
                 }
             } catch (Exception e) {
-                Toast.makeText(context, e.getMessage(),
-                        Toast.LENGTH_LONG).show();
+                Toast.makeText(context, e.getMessage(), Toast.LENGTH_LONG).show();
             } finally {
                 super.onPostExecute(json);
             }
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        //return super.onCreateOptionsMenu(menu);
-        MenuInflater menuInflater = getMenuInflater();
-        menuInflater.inflate(R.menu.menu, menu);
-        return true;
-    }
-
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                intent = new Intent(this, SearchActivity.class);
-                startActivity(intent);
-                return true;
-
-            case R.id.action_settings2:
-                intent = new Intent(this, LoginActivity.class);
-                startActivity(intent);
-                return true;
-
-            case R.id.action_settings3:
-                intent = new Intent(this, JoinActivity.class);
-                startActivity(intent);
-                return true;
-
-            case R.id.action_settings4:
-                intent = new Intent(this, LogoutActivity.class);
-                startActivity(intent);
-                return true;
-
-            default:
-                // If we got here, the user's action was not recognized.
-                // Invoke the superclass to handle it.
-                return super.onOptionsItemSelected(item);
-
         }
     }
 }

@@ -19,6 +19,7 @@
         <activity android:name=".SearchActivity"></activity>
         <activity android:name=".LoginActivity"></activity>
         <activity android:name=".JoinActivity"></activity>
+        <activity android:name=".LogoutActivity"></activity>
     </application>
 
 </manifest>
