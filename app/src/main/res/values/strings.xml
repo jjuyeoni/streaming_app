@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Hello</string>
+    <!--<string name="app_name">Hello</string>-->
     <string-array name="video_array">
         <item>유투브</item>
         <item>카카오</item>
