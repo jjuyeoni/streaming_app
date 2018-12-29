@@ -1,6 +1,8 @@
 package org.teckown.hello;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -22,7 +24,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,10 +46,23 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     int num = 3;
     WebView myWebView;
     ListView searchlist;
+    ListViewAdapter mAdapter;
     static DrawableManager DM = new DrawableManager();
-    final String serverKey = "AIzaSyDYQy1GKyWfPm9ZostsAYWOTvAmrBwtvVQ";
+    final String serverKey = "AIzaSyDYQy1GKyWfPm9ZostsAYWOTvAmrBwtvVQ";  //유튜브api 서버키
+    final String twitchKey = "nh1k78l9z6ohg6md25a56ewdeks48u";            //트위치키
+    final String serverUrl = "https://avocadoapi.herokuapp.com/api/v1/channels/save?auth_token=";
+
+    //파싱데이터 담기
     ArrayList<listViewItem> sdata = new ArrayList<listViewItem>();
-    AsyncTask<?,?,?> searchTask;
+
+    AsyncTask<?,?,?> searchTask; //유튜브 검색
+    AsyncTask<?,?,?> searchTaskTwitch; //트위치 검색
+    AsyncTask<?,?,?> sendTask; //서버로 json Data보내는 async
+
+    HttpClient client;
+    HttpPost post;
+    boolean nullCheck = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -56,15 +76,20 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner
         spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
+
         param = (EditText)findViewById(R.id.edTxtParam);
         //웹뷰
         myWebView = (WebView) findViewById(R.id.webview);
         myWebView.setVisibility(View.INVISIBLE);
-
+        //검색결과 리스트뷰
         searchlist = (ListView) findViewById(R.id.listview);
         searchlist.setVisibility(View.INVISIBLE);
-
-        spinner.setOnItemSelectedListener(this);
+        //커스텀 어댑터
+        mAdapter = new ListViewAdapter(SearchActivity.this, R.layout.listview_search, sdata);
+        searchlist.setAdapter(mAdapter);
+        //리스트뷰 클릭 리스너
+        searchlist.setOnItemClickListener(onItemClickListener);
     }
 
     public void onItemSelected(AdapterView<?> parent, View view,
@@ -89,57 +114,64 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
             myWebView.loadUrl("https://tv.kakao.com/search?q="+param.getText());
         }
         else if( num == 2 ) {
-            Log.d("트위치", "선택");
-            Toast.makeText(getApplicationContext(),
-                    "트위치", Toast.LENGTH_SHORT).show();
+            myWebView.setVisibility(View.INVISIBLE);
+            searchlist.setVisibility(View.VISIBLE);
+            Log.d("트위치", "선택됨");
+            searchTaskTwitch = new searchTaskTwitch().execute();
         }
         else
             Toast.makeText(getApplicationContext(),
                     "에러", Toast.LENGTH_SHORT).show();
     }
 
+    //트위치 api
+    private class searchTaskTwitch extends AsyncTask<Void, Void, Void> {
 
-    private class searchTask extends AsyncTask<Void, Void, Void> {
-
-        ProgressDialog progressDialog;
+        //ProgressDialog progressDialog;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-           // progressDialog = ProgressDialog.show(SearchActivity.this, "...", "검색중");
+            // progressDialog = ProgressDialog.show(SearchActivity.this, "...", "검색중");
         }
+
         @Override
         protected Void doInBackground(Void... params) {
-            Log.d("Youtube", "doinBack");
+            Log.d("Twitch", "doinBack");
             try {
-                paringJsonData(getUtube(param.getText()));
+                paringJsonData(getTwitch(param.getText()));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
             return null;
         }
+
         @Override
 
         protected void onPostExecute(Void result) {
-            Log.d("Youtube", "onPostExecute");
-            ListViewAdapter mAdapter = new ListViewAdapter(SearchActivity.this, R.layout.listview_search, sdata);
-            searchlist.setAdapter(mAdapter);
-            mAdapter.setList(sdata);
-            Log.d("Youtube", "어댑터에 뿌리기");
+            Log.d("Twitch", "onPostExecute");
+//            ListViewAdapter mAdapter = new ListViewAdapter(SearchActivity.this, R.layout.listview_search, sdata);
+              searchlist.setAdapter(mAdapter);
+            if (nullCheck == false) {
+                mAdapter.setList(sdata);
+                Log.d("Twitch", "어댑터에 뿌리기");
+            }
+            //else setText("해당 채널이 없습니다");
+            //Log.d("Twitch", "검색 결과가 없음");
         }
-        public JSONObject getUtube(Editable q) {
-            HttpGet httpGet = new HttpGet(
-                    "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=7&key=" + serverKey + "&q=" + q
+
+        public JSONObject getTwitch(Editable q) {
+            HttpGet httpGet = new HttpGet(// part(snippet), q(검색값) , key(서버키)
+                    "https://api.twitch.tv/kraken/search/channels?query=" + q +"&client_id=" + twitchKey + "&limit=1"
             );
-            Log.d("Youtube", "httpGEt: " + httpGet);
-// part(snippet), q(검색값) , key(서버키)
+            Log.d("Twitch", "httpGEt: " + httpGet);
+
             HttpClient client = new DefaultHttpClient();
             HttpResponse response;
             StringBuilder stringBuilder = new StringBuilder();
             try {
-                Log.d("Youtube", "2try");
+                Log.d("Twitch", "2try");
                 response = client.execute(httpGet);
-                Log.d("Youtube", "http client");
                 HttpEntity entity = response.getEntity();
                 InputStream stream = entity.getContent();
                 int b;
@@ -153,19 +185,113 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
             try {
                 jsonObject = new JSONObject(stringBuilder.toString());
             } catch (JSONException e) {
-// TODO Auto-generated catch block
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             return jsonObject;
         }
-// 파싱을 하면 여러가지 값을 얻을 수 있는데 필요한 값들을 세팅하셔서 사용하시면 됩니다.
 
+        //json 파싱
+        private void paringJsonData(JSONObject jsonObject) throws JSONException {
+            Log.d("Twitch", "json 파서");
+            sdata.clear();
+            String total = jsonObject.getString("_total");
+            if (total.equals(0)) {
+                nullCheck = true;
+            }
+            else {
+                JSONArray contacts = jsonObject.getJSONArray("channels");
+                for (int i = 0; i < contacts.length(); i++) {
+                    Log.d("Twitch", "for");
+                    JSONObject c = contacts.getJSONObject(i);
+
+                    String user = c.getString("display_name");
+                    String userName = "";
+                    // 제목 urf8설정
+                    try {
+                        userName = new String(user.getBytes("8859_1"), "utf-8");
+                        Log.d("Twitch", "for1");
+                    } catch (UnsupportedEncodingException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    String userID = c.getString("name");
+                    Log.d("Twitch", "for2");
+                    String url = "https://www.twitch.tv/" + userID;
+
+                    String date = c.getString("created_at") // 등록날짜
+                            .substring(0, 10);
+                    String imgUrl = c.getString("profile_banner"); // 프로필 이미지 URL값
+                    Log.d("Twitch", "URL: " + imgUrl);
+                    sdata.add(new listViewItem(userID,userName, date, url, imgUrl));//순서 title user time url thumnail
+                    Log.d("Twitch", "성공!!");
+                }
+            }
+        }
+    }
+
+    private class searchTask extends AsyncTask<Void, Void, Void> {
+
+        //ProgressDialog progressDialog;
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+           // progressDialog = ProgressDialog.show(SearchActivity.this, "...", "검색중");
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                paringJsonData(getUtube(param.getText()));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+        @Override
+
+        protected void onPostExecute(Void result) {
+            Log.d("Youtube", "onPostExecute");
+//            ListViewAdapter mAdapter = new ListViewAdapter(SearchActivity.this, R.layout.listview_search, sdata);
+            searchlist.setAdapter(mAdapter);
+            mAdapter.setList(sdata);
+            Log.d("Youtube", "어댑터에 뿌리기");
+        }
+        public JSONObject getUtube(Editable q) {
+            HttpGet httpGet = new HttpGet(// part(snippet), q(검색값) , key(서버키)
+                    "https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=7&key=" + serverKey + "&q=" + q
+            );
+            Log.d("Youtube", "httpGEt: " + httpGet);
+
+            HttpClient client = new DefaultHttpClient();
+            HttpResponse response;
+            StringBuilder stringBuilder = new StringBuilder();
+            try {
+                response = client.execute(httpGet);
+                HttpEntity entity = response.getEntity();
+                InputStream stream = entity.getContent();
+                int b;
+                while ((b = stream.read()) != -1) {
+                    stringBuilder.append((char) b);
+                }
+            } catch (ClientProtocolException e) {
+            } catch (IOException e) {
+            }
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject = new JSONObject(stringBuilder.toString());
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            return jsonObject;
+        }
+        //json 파싱
         private void paringJsonData(JSONObject jsonObject) throws JSONException {
             Log.d("Youtube", "json 파서");
             sdata.clear();
             JSONArray contacts = jsonObject.getJSONArray("items");
             for (int i = 0; i < contacts.length(); i++) {
-                Log.d("Youtube", "for");
                 JSONObject c = contacts.getJSONObject(i);
 
                 String title = c.getJSONObject("snippet").getString("title");
@@ -173,39 +299,29 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
                 // 제목 urf8설정
                 try {
                     titleUTF8 = new String(title.getBytes("8859_1"), "utf-8");
-                    Log.d("Youtube", "for1");
                 } catch (UnsupportedEncodingException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 String user = c.getJSONObject("snippet").getString("channelTitle");
-                Log.d("Youtube", "for2");
                 String userUTF8 = "";
                 //user 이름 utf8설정
                 try {
                     userUTF8 = new String(user.getBytes("8859_1"), "utf-8");
-                    Log.d("Youtube", "for3");
                 } catch (UnsupportedEncodingException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
                 JSONObject jsonOb = c.getJSONObject("id");
-                Log.d("Youtube", "for4");
                 String url = ""; //채널 url 채널 나옴
                 String vUrl = ""; //영상 url 영상 나옴
                 if ( jsonOb.has("videoId") ){ //video일 경우
-                    Log.d("Youtube", "for video");
                     String id = jsonOb.getString("videoId");
                     url = "https://www.youtube.com/watch?v=" + id;
-                    Log.d("Youtube", "id" + id);
-                    Log.d("Youtube", "url" + url);
                 }
                 else { //채널일 경우
-                    Log.d("Youtube", "for");
                     String id = jsonOb.getString("channelId");
                     url = "https://www.youtube.com/channel/" + id;
-                    Log.d("Youtube", "id" + id);
-                    Log.d("Youtube", "url" + url);
                 }
 
                 String date = c.getJSONObject("snippet").getString("publishedAt") // 등록날짜
@@ -215,10 +331,75 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
                         .getString("url"); // 썸내일 이미지 URL값
                 Log.d("Youtube", "제목 : " + title);
                 Log.d("Youtube", "URL: " + imgUrl);
-                sdata.add(new listViewItem(titleUTF8, userUTF8, date, url, imgUrl));//title user time url thumnail
+                sdata.add(new listViewItem(titleUTF8, userUTF8, date, url, imgUrl));//순서 title user time url thumnail
                 Log.d("Youtube", "성공!!");
             }
         }
     }
+
+    //json보내는 asyncTack
+    private class sendTask extends AsyncTask<listViewItem, Void, Void> {
+
+        @Override
+        protected Void doInBackground(listViewItem... objects) {
+            sendPost(objects[0]);
+            return null;
+        }
+        public void sendPost(listViewItem list) {
+            client = new DefaultHttpClient();
+            HttpConnectionParams.setConnectionTimeout(client.getParams(), 30000); //타임아웃 설정
+            post = new HttpPost(serverUrl); // 토큰값 추가
+            JSONObject jsonObject = new JSONObject();
+            try {
+                jsonObject.put("chennalName", list.getUser());
+                jsonObject.put("chennalUrl", list.getUrl());
+                StringEntity entity = new StringEntity(jsonObject.toString(), HTTP.UTF_8);
+                //UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
+                entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                post.setEntity(entity);
+                client.execute(post);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+    AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final listViewItem dto = sdata.get(position);
+            AlertDialog.Builder builder = new AlertDialog.Builder(SearchActivity.this);
+            builder.setTitle("채널 등록")
+                    .setMessage(dto.getUser() + " 채널을 등록할까요?")
+                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            sendTask.execute((Runnable) dto);
+                            Toast.makeText(getApplicationContext(), "등록성공", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .show();
+        }
+    };
 }
 
