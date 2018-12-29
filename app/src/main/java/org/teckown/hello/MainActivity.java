@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
 //      create toolbar
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        
         channelList = (ListView)findViewById(R.id.mainlist);
         //커스텀 어댑터
         mAdapter = new channelAdapter(MainActivity.this, R.layout.listview_main, sdata);

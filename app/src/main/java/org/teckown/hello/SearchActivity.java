@@ -82,9 +82,6 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
         spinner.setOnItemSelectedListener(this);
 
         param = (EditText)findViewById(R.id.edTxtParam);
-        //웹뷰
-        myWebView = (WebView) findViewById(R.id.webview);
-        myWebView.setVisibility(View.INVISIBLE);
         //검색결과 리스트뷰
         searchlist = (ListView) findViewById(R.id.listview);
         searchlist.setVisibility(View.INVISIBLE);
