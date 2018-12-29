@@ -37,6 +37,11 @@ public class LoginActivity extends AppCompatActivity {
         mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
     }
 
+    public void setSignUpView(View v){
+        Intent intent = new Intent(this, JoinActivity.class);
+        startActivity(intent);
+        return;
+    }
     public void login(View v){
         EditText userId = (EditText)findViewById(R.id.userId);
         mUserId = userId.getText().toString();

@@ -38,6 +38,12 @@ public class JoinActivity extends AppCompatActivity {
         mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
     }
 
+    public void setLoginView(View v){
+        Intent intent = new Intent(this, LoginActivity.class);
+        startActivity(intent);
+        return;
+    }
+
     public void registerNewAccount(View button) {
         EditText userEmailField = (EditText) findViewById(R.id.userEmail);
         mUserEmail = userEmailField.getText().toString();

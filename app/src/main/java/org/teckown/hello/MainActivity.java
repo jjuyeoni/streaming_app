@@ -44,8 +44,6 @@ public class MainActivity extends AppCompatActivity {
 //      create toolbar
         Toolbar myToolbar = (Toolbar) findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        Log.i("사용자",mPreferences.getString("AuthToken",""));
-        Toast.makeText(this, mPreferences.getString("email",""), Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -135,16 +133,6 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_settings2:
-                intent = new Intent(this, LoginActivity.class);
-                startActivity(intent);
-                return true;
-
-            case R.id.action_settings3:
-                intent = new Intent(this, JoinActivity.class);
-                startActivity(intent);
-                return true;
-
-            case R.id.action_settings4:
                 intent = new Intent(this, LogoutActivity.class);
                 startActivity(intent);
                 return true;

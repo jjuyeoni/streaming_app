@@ -1,41 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:id="@+id/userEmail"
+        android:layout_centerHorizontal="true"
+        android:hint="Email"
+        android:layout_marginTop="151dp" />
 
-        <EditText
-            android:id="@+id/userEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textPersonName"
-            android:text="Name" />
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:id="@+id/userPwd"
+        android:layout_centerHorizontal="true"
+        android:hint="Password"
+        android:layout_below="@+id/userEmail" />
 
-        <EditText
-            android:id="@+id/userPwd"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textPassword" />
+    <EditText
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:id="@+id/userPwdConfirm"
+        android:layout_centerHorizontal="true"
+        android:hint="Password Confirm"
+        android:layout_below="@+id/userPwd" />
 
-        <EditText
-            android:id="@+id/userPwdConfirm"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textPassword" />
+    <Button
+        android:id="@+id/joinButton"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_below="@+id/userPwdConfirm"
+        android:layout_marginTop="20dp"
+        android:layout_toStartOf="@+id/signupButton"
+        android:onClick="registerNewAccount"
+        android:text="Sign up"
+        android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/joinButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:onClick="registerNewAccount"
-            android:text="Button" />
-    </LinearLayout>
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:id="@+id/signupButton"
+        android:layout_width="150dp"
+        android:layout_height="55dp"
+        android:layout_alignTop="@+id/joinButton"
+        android:layout_alignEnd="@+id/userPwdConfirm"
+        android:onClick="setLoginView"
+        android:text="Log in"
+        android:textAllCaps="false" />
+
+
+
+</RelativeLayout>
