@@ -210,7 +210,15 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
                 Log.d("Kakao", "c_name" + c_name.getString(i));
                 Log.d("Kakao", "c_link" + c_link.getString(i));
                 Log.d("Kakao", "c_img" + c_img.getString(i));
-                sdata.add(new listViewItem("null",c_name.getString(i), "null", c_link.getString(i), "https:" + c_img.getString(i), "k"));//순서 title user time url thumnail platform
+                String name = c_name.getString(i);
+                String nameUTF = "";
+                try {
+                    nameUTF = new String(name.getBytes("8859_1"), "utf-8");
+                } catch (UnsupportedEncodingException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+                sdata.add(new listViewItem("null",nameUTF, "null", c_link.getString(i), "https:" + c_img.getString(i), "k"));//순서 title user time url thumnail platform
                 Log.d("Kakao", "저장 성공 " + i);
             }
 
