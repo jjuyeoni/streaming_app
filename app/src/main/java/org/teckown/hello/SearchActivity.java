@@ -45,7 +45,6 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
 
     EditText param;
     int num = 3;
-    WebView myWebView;
     ListView searchlist;
     ListViewAdapter mAdapter;
     static DrawableManager DM = new DrawableManager();
@@ -106,19 +105,15 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     //플랫폼별 채널 검색 버튼 onClick ##########################################################################
     public void onClick(View v){
         if( num == 0 ) {
-            myWebView.setVisibility(View.INVISIBLE);
             searchlist.setVisibility(View.VISIBLE);
             Log.d("Youtube", "유튜브 선택됨");
             searchTask = new searchTask().execute();
         }
         else if( num == 1) {
-            myWebView.setVisibility(View.INVISIBLE);
             searchlist.setVisibility(View.VISIBLE);
-            //myWebView.loadUrl("https://tv.kakao.com/search?q="+param.getText());
             searchTaskKakao = new searchTaskKakao().execute();
         }
         else if( num == 2 ) {
-            myWebView.setVisibility(View.INVISIBLE);
             searchlist.setVisibility(View.VISIBLE);
             Log.d("트위치", "선택됨");
             searchTaskTwitch = new searchTaskTwitch().execute();
