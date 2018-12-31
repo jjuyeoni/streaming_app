@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
+import android.support.design.widget.TabLayout;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String TASKS_URL = "https://avocadoapi.herokuapp.com/api/v1/sessions/verify";
     private static final String CHNNEL_URL = "https://avocadoapi.herokuapp.com/api/v1/channels/show";
 
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
+
     //파싱데이터 담기
     ArrayList<channelItem> sdata = new ArrayList<channelItem>();
     ListView channelList;
@@ -61,11 +66,46 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
-        channelList = (ListView)findViewById(R.id.mainlist);
+//        channelList = (ListView)findViewById(R.id.mainlist);
+//
+//        //커스텀 어댑터
+//        mAdapter = new channelAdapter(MainActivity.this, R.layout.listview_main, sdata);
+//        channelList.setAdapter(mAdapter);
 
-        //커스텀 어댑터
-        mAdapter = new channelAdapter(MainActivity.this, R.layout.listview_main, sdata);
-        channelList.setAdapter(mAdapter);
+        // Initializing the TabLayout
+        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        tabLayout.addTab(tabLayout.newTab().setText("Tab One"));
+        tabLayout.addTab(tabLayout.newTab().setText("Tab Two"));
+        tabLayout.addTab(tabLayout.newTab().setText("Tab Three"));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+        // Initializing ViewPager
+        viewPager = (ViewPager) findViewById(R.id.pager);
+
+        // Creating TabPagerAdapter adapter
+        TabPagerAdapter pagerAdapter = new TabPagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(pagerAdapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+
+        // Set TabSelectedListener
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
     }
 
     @Override
