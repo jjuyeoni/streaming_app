@@ -1,7 +1,9 @@
 package org.teckown.hello;
 
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -13,6 +15,8 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -26,14 +30,19 @@ import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,12 +52,16 @@ public class MainActivity extends AppCompatActivity {
     private SharedPreferences mPreferences;
     private static final String TASKS_URL = "https://avocadoapi.herokuapp.com/api/v1/sessions/verify";
     private static final String CHNNEL_URL = "https://avocadoapi.herokuapp.com/api/v1/channels/show";
+    private static final String REMOVE_URL = "https://avocadoapi.herokuapp.com/api/v1/channels/destroy";
 
     //파싱데이터 담기
     ArrayList<channelItem> sdata = new ArrayList<channelItem>();
     ListView channelList;
     channelAdapter mAdapter;
 
+    AsyncTask<?,?,?> sendTask; //채널삭제
+    HttpClient client;
+    HttpPost post;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,6 +79,10 @@ public class MainActivity extends AppCompatActivity {
         //커스텀 어댑터
         mAdapter = new channelAdapter(MainActivity.this, R.layout.listview_main, sdata);
         channelList.setAdapter(mAdapter);
+        //리스트뷰 클릭 리스터
+        channelList.setOnItemClickListener(onItemClickListener);
+        mAdapter.notifyDataSetChanged();
+
     }
 
     @Override
@@ -186,14 +203,36 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(JSONObject json) {
+            sdata.clear();
             try {
                 if (json.getBoolean("success")) {
                     String info = json.getString("info");
                     Log.d("GetList", "info" + info);
                     JSONArray dataJson = json.getJSONArray("data");
-                    JSONObject data = dataJson.getJSONObject(0);
-                    String name = data.getString("name");
-                    Log.d("GetList", "data" + name);
+                    for(int i = 0; i < dataJson.length(); i++) {
+                        JSONObject data = dataJson.getJSONObject(i);
+                        String id = data.getString("id");
+                        Log.d("GetList", "id " + id);
+                        String name = data.getString("name");
+                        Log.d("GetList", "name " + name);
+                        String imgUrl = data.getString("img");
+                        Log.d("GetList", "img " + imgUrl);
+                        String link = data.getString("link");
+                        Log.d("GetList", "link " + link);
+                        String platform = data.getString("platform_type");
+                        if (platform.equals("t"))
+                            platform = "트위치";
+                        else if (platform.equals("k"))
+                            platform = "카카오TV";
+                        else if (platform.equals("y"))
+                            platform = "유튜브";
+                        Log.d("GetList", "platform " + platform);
+                        sdata.add(new channelItem(id, name, imgUrl, link, platform));
+                        Log.d("GetList", "저장 성공 " + i);
+                    }
+                    channelList.setAdapter(mAdapter);
+                    mAdapter.setList(sdata);
+                    Log.d("GetList", "setlist");
                 }
             } catch (Exception e) {
                 Toast.makeText(context, e.getMessage(),
@@ -232,5 +271,83 @@ public class MainActivity extends AppCompatActivity {
 
         }
     }
+    //서버로 삭제할 채널정보 보내기 ###############################################################################
+    private class sendTask extends AsyncTask<channelItem, Void, Void> {
+
+        @Override
+        protected Void doInBackground(channelItem... objects) {
+            sendPost(objects[0]);
+            return null;
+        }
+        public void sendPost(channelItem c) {
+            client = new DefaultHttpClient();
+            HttpConnectionParams.setConnectionTimeout(client.getParams(), 30000); //타임아웃 설정
+            String url = REMOVE_URL + "?auth_token=" + mPreferences.getString("AuthToken", "");
+            Log.d("서버전송", "URL: " + url);
+            post = new HttpPost(url);
+            JSONObject jsonObject = new JSONObject();
+
+            try {
+                jsonObject.put("AuthToken", mPreferences.getString("AuthToken", ""));
+                jsonObject.put("id", c.getId());
+                StringEntity entity = new StringEntity(jsonObject.toString(), HTTP.UTF_8);
+                Log.d("서버전송", "try");
+                //UrlEncodedFormEntity entity = new UrlEncodedFormEntity(post, "UTF-8");
+                entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
+                post.setEntity(entity);
+                client.execute(post);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            } catch (ClientProtocolException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
+    }
+    //리스트뷰 클릭
+    AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final channelItem dto = sdata.get(position);
+            Log.d("채널삭제", "onclick list");
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("채널 삭제")
+                    .setMessage(dto.getName() + " 채널을 삭제할까요?")
+                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            Log.d("채널삭제", "확인버트 누르고");
+                            sendTask = new sendTask().execute(dto);
+                            mAdapter.notifyDataSetChanged();
+                            Toast.makeText(getApplicationContext(), "삭제성공", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+        }
+    };
 
 }
