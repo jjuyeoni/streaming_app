@@ -1,9 +1,7 @@
 package org.teckown.hello;
 
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -12,25 +10,19 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.text.Editable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.savagelook.android.MyAsyncTask;
 import com.savagelook.android.UrlJsonAsyncTask;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
@@ -43,14 +35,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     Intent intent;
+    TabPagerAdapter pagerAdapter;
     private SharedPreferences mPreferences;
     private static final String TASKS_URL = "https://avocadoapi.herokuapp.com/api/v1/sessions/verify";
     private static final String CHNNEL_URL = "https://avocadoapi.herokuapp.com/api/v1/channels/show";
@@ -61,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     //파싱데이터 담기
     ArrayList<channelItem> sdata = new ArrayList<channelItem>();
+
     ListView channelList;
     channelAdapter mAdapter;
 
@@ -96,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         viewPager = (ViewPager) findViewById(R.id.pager);
 
         // Creating TabPagerAdapter adapter
-        TabPagerAdapter pagerAdapter = new TabPagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        pagerAdapter = new TabPagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(pagerAdapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
 
@@ -119,6 +111,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+//        //커스텀 어댑터
+//        mAdapter = new channelAdapter(MainActivity.this, R.layout.listview_main, sdata);
+//        channelList.setAdapter(mAdapter);
+//        //리스트뷰 클릭 리스터
+//        channelList.setOnItemClickListener(onItemClickListener);
+//        mAdapter.notifyDataSetChanged();
 
     }
 
@@ -141,6 +139,7 @@ public class MainActivity extends AppCompatActivity {
         getTasksTask.setMessageLoading("Loading tasks...");
         getTasksTask.execute(url + "?auth_token=" + mPreferences.getString("AuthToken", ""));
     }
+
 
     private class GetTasksTask extends UrlJsonAsyncTask {
         public GetTasksTask(Context context) {
@@ -202,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
         getChannelURL.execute(url + "?user_id="+mPreferences.getString("uid",""));
     }
 
-    private class GetChannelURL extends UrlJsonAsyncTask {
+    private class GetChannelURL extends MyAsyncTask {
         public GetChannelURL(Context context) {
             super(context);
         }
@@ -263,13 +262,9 @@ public class MainActivity extends AppCompatActivity {
                             platform = "카카오TV";
                         else if (platform.equals("y"))
                             platform = "유튜브";
-                        Log.d("GetList", "platform " + platform);
-                        sdata.add(new channelItem(id, name, imgUrl, link, platform));
                         Log.d("GetList", "저장 성공 " + i);
+                        sdata.add(new channelItem(id, name, imgUrl, link, platform));
                     }
-                    channelList.setAdapter(mAdapter);
-                    mAdapter.setList(sdata);
-                    Log.d("GetList", "setlist");
                 }
             } catch (Exception e) {
                 Toast.makeText(context, e.getMessage(),
@@ -359,32 +354,32 @@ public class MainActivity extends AppCompatActivity {
             super.onPostExecute(aVoid);
         }
     }
-    //리스트뷰 클릭
-    AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            final channelItem dto = sdata.get(position);
-            Log.d("채널삭제", "onclick list");
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            builder.setTitle("채널 삭제")
-                    .setMessage(dto.getName() + " 채널을 삭제할까요?")
-                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Log.d("채널삭제", "확인버트 누르고");
-                            sendTask = new sendTask().execute(dto);
-                            mAdapter.notifyDataSetChanged();
-                            Toast.makeText(getApplicationContext(), "삭제성공", Toast.LENGTH_LONG).show();
-                        }
-                    })
-                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    })
-                    .show();
-        }
-    };
+//    //리스트뷰 클릭
+//    AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
+//        @Override
+//        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//            final channelItem dto = sdata.get(position);
+//            Log.d("채널삭제", "onclick list");
+//            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//            builder.setTitle("채널 삭제")
+//                    .setMessage(dto.getName() + " 채널을 삭제할까요?")
+//                    .setPositiveButton("확인", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            Log.d("채널삭제", "확인버트 누르고");
+//                            sendTask = new sendTask().execute(dto);
+//                            mAdapter.notifyDataSetChanged();
+//                            Toast.makeText(getApplicationContext(), "삭제성공", Toast.LENGTH_LONG).show();
+//                        }
+//                    })
+//                    .setNegativeButton("취소", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            dialog.dismiss();
+//                        }
+//                    })
+//                    .show();
+//        }
+//    };
 
 }
