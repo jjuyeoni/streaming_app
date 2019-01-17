@@ -2,8 +2,10 @@ package org.teckown.hello;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -40,9 +42,11 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.teckown.hello.sqliteDB.ChannelDBHepler;
 
 public class SearchActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
+    ChannelDBHepler cDBHelper;
     EditText param;
     int num = 3;
     ListView searchlist;
@@ -69,7 +73,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-
+        cDBHelper = new ChannelDBHepler(this);
         Spinner spinner = (Spinner)findViewById(R.id.spinner);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -484,6 +488,14 @@ public class SearchActivity extends AppCompatActivity implements AdapterView.OnI
                 entity.setContentType(new BasicHeader(HTTP.CONTENT_TYPE, "application/json"));
                 post.setEntity(entity);
                 client.execute(post);
+                SQLiteDatabase db = cDBHelper.getWritableDatabase();
+                ContentValues row = new ContentValues();
+                row.put("name", list.getUser());
+                row.put("img", list.getThumnail());
+                row.put("link", list.getUrl());
+                row.put("platform_type", list.getPlatform());
+                db.insert(cDBHelper.TABLE_NAME, null, row);
+                cDBHelper.close();
             } catch (JSONException e) {
                 e.printStackTrace();
             } catch (UnsupportedEncodingException e) {

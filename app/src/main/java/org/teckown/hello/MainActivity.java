@@ -1,9 +1,10 @@
 package org.teckown.hello;
 
-
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
@@ -37,9 +38,11 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import org.teckown.hello.sqliteDB.ChannelDBHepler;
 
 public class MainActivity extends AppCompatActivity {
 
+    ChannelDBHepler channelDBHepler;
     Intent intent;
     TabPagerAdapter pagerAdapter;
     private SharedPreferences mPreferences;
@@ -63,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        channelDBHepler = new ChannelDBHepler(this);
         mPreferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
 
 //      create toolbar
@@ -127,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
 //            user login check
             loadTasksFromAPI(TASKS_URL);
 //            user channel check
-            getChannelFromAPI(CHNNEL_URL);
+//            getChannelFromAPI(CHNNEL_URL);
         } else {
             Intent intent = new Intent(MainActivity.this, LoginActivity.class);
             startActivityForResult(intent, 0);
@@ -239,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(JSONObject json) {
-            sdata.clear();
+            //sdata.clear();
             try {
                 if (json.getBoolean("success")) {
                     String info = json.getString("info");
@@ -263,7 +266,8 @@ public class MainActivity extends AppCompatActivity {
                         else if (platform.equals("y"))
                             platform = "유튜브";
                         Log.d("GetList", "저장 성공 " + i);
-                        sdata.add(new channelItem(id, name, imgUrl, link, platform));
+
+                        //sdata.add(new channelItem(id, name, imgUrl, link, platform));
                     }
                 }
             } catch (Exception e) {
